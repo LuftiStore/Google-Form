@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LufzAI</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#eef2ff;font:15px system-ui,sans-serif}main{max-width:720px;margin:auto;padding:24px 18px}header{padding:22px 0 28px}.logo{font-size:29px;font-weight:850;letter-spacing:-1px}.logo span{color:#60a5fa}.sub,.muted,small{color:#9caecb;line-height:1.5}.panel{background:#141d32;border:1px solid #273650;border-radius:18px;padding:18px;margin:12px 0}label{display:block;font-weight:650;margin:0 0 9px}input{width:100%;padding:15px;border-radius:12px;border:1px solid #394966;background:#0d1527;color:white;font-size:14px;margin-bottom:12px}button{width:100%;padding:15px;border:0;border-radius:12px;background:#2563eb;color:white;font-weight:750;font-size:15px;margin-top:4px}button:disabled{opacity:.55}.status{margin-top:12px;color:#93c5fd;overflow-wrap:anywhere}.result{white-space:pre-wrap;line-height:1.65;overflow-wrap:anywhere}.hidden{display:none}.foot{font-size:12px;color:#8293ae;margin-top:20px}
+</style>
+</head>
+<body><main>
+<header><div class="logo">Lufz<span>AI</span></div><div class="sub">Form Assistant · Study Mode</div></header>
+<section class="panel">
+<label for="url">Link Google Form publik</label>
+<input id="url" type="url" placeholder="https://docs.google.com/forms/d/e/.../viewform">
+<button id="go">Analisis untuk belajar</button>
+<div id="status" class="status" role="status"></div>
+<p class="muted">LufzAI mencoba membaca soal dari halaman publik dan memberi pembahasan. Aplikasi tidak mengisi atau mengirim formulir.</p>
+</section>
+<section id="out" class="panel hidden"><h3 id="title">Hasil analisis</h3><div id="result" class="result"></div></section>
+<section class="panel">
+<label for="base">Alamat backend HTTPS</label><input id="base" type="url" placeholder="https://nama-layanan.onrender.com">
+<label for="token">Token aplikasi</label><input id="token" type="password" placeholder="Token dari pengaturan hosting">
+<button id="save" style="background:#334155">Simpan pengaturan</button>
+<small>Jangan masukkan OpenAI API Key di sini. Simpan API Key hanya pada pengaturan rahasia backend.</small>
+</section>
+<div class="foot">LufzAI · Gunakan sebagai pendamping belajar. Periksa kembali setiap jawaban AI.</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$('base').value=localStorage.getItem('backend')||'';$('token').value=localStorage.getItem('apptoken')||'';
+$('save').onclick=()=>{localStorage.setItem('backend',$('base').value.trim().replace(/\/+$/,''));localStorage.setItem('apptoken',$('token').value.trim());$('status').textContent='Pengaturan tersimpan di perangkat.'};
+$('go').onclick=async()=>{
+ const url=$('url').value.trim(),base=($('base').value||localStorage.getItem('backend')||'').trim().replace(/\/+$/,''),token=$('token').value||localStorage.getItem('apptoken')||'';
+ if(!url||!base){$('status').textContent='Masukkan link form dan alamat backend terlebih dahulu.';return}
+ $('go').disabled=true;$('status').textContent='Membaca form dan menganalisis soal…';$('out').classList.add('hidden');
+ try{const r=await fetch(base+'/api/analyze',{method:'POST',headers:{'Content-Type':'application/json','X-App-Token':token},body:JSON.stringify({url})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Permintaan gagal');$('title').textContent=data.title||'Hasil analisis';$('result').textContent=data.analysis||'Tidak ada hasil.';$('out').classList.remove('hidden');$('status').textContent='Analisis selesai.'}
+ catch(e){$('status').textContent='Gagal: '+e.message}finally{$('go').disabled=false}
+};
+</script></body></html>
